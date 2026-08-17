@@ -14,6 +14,12 @@ export function MovieForm() {
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [genreIds, setGenreIds] = useState<string[]>([]);
 
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+
+  const MAX_BUDGET = 9_999_999_999_999_999.99;
+
   const dispatch = useAppDispatch();
 
   const genres = useAppSelector((state) => state.genres.items);
@@ -37,6 +43,43 @@ export function MovieForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const errors: Record<string, string> = {};
+
+    if (!title.trim()) {
+      errors.Title = "Title is required.";
+    }
+
+    if (!durationMinutes) {
+      errors.DurationMinutes = "Duration is required.";
+    } else if (Number(durationMinutes) < 1) {
+      errors.DurationMinutes = "Duration must be at least 1 minute.";
+    }
+
+    if (!language) {
+      errors.Language = "Language is required.";
+    }
+
+    if (genreIds.length === 0) {
+      errors.GenreIds = "At least one genre is required.";
+    }
+
+    if (budgetAmount) {
+      const budget = Number(budgetAmount);
+
+      if (!Number.isFinite(budget)) {
+        errors.BudgetAmount = "Budget is too large.";
+      } else if (budget < 0) {
+        errors.BudgetAmount = "Budget cannot be negative.";
+      } else if (budget > MAX_BUDGET) {
+        errors.BudgetAmount = "Budget is too large.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
     try {
       await dispatch(
         createMovie({
@@ -57,6 +100,7 @@ export function MovieForm() {
       setSynopsis("");
       setBudgetAmount("");
       setCurrencyCode("USD");
+      setValidationErrors({});
     } catch {
       // Redux already stores the error.
     }
@@ -64,6 +108,7 @@ export function MovieForm() {
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit}
       className="rounded-lg border border-zinc-800 bg-zinc-900 p-6"
     >
@@ -89,7 +134,9 @@ export function MovieForm() {
             className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
           />
 
-          <FieldError messages={createErrorDetails.Title} />
+          <FieldError
+            messages={validationErrors.Title ?? createErrorDetails.Title}
+          />
         </div>
 
         <div>
@@ -100,13 +147,17 @@ export function MovieForm() {
           <input
             id="duration"
             type="number"
-            min="1"
             value={durationMinutes}
             onChange={(event) => setDurationMinutes(event.target.value)}
             className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
           />
 
-          <FieldError messages={createErrorDetails.DurationMinutes} />
+          <FieldError
+            messages={
+              validationErrors.DurationMinutes ??
+              createErrorDetails.DurationMinutes
+            }
+          />
         </div>
 
         <div>
@@ -114,28 +165,36 @@ export function MovieForm() {
             Genres
           </RequiredLabel>
 
-          <select
-            id="genres"
-            multiple
-            value={genreIds}
-            onChange={(event) => {
-              const selectedGenreIds = Array.from(
-                event.target.selectedOptions,
-                (option) => option.value,
+          <div className="flex flex-wrap gap-2">
+            {genres.map((genre) => {
+              const isSelected = genreIds.includes(genre.id);
+
+              return (
+                <button
+                  key={genre.id}
+                  type="button"
+                  onClick={() => {
+                    setGenreIds((current) =>
+                      isSelected
+                        ? current.filter((id) => id !== genre.id)
+                        : [...current, genre.id],
+                    );
+                  }}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    isSelected
+                      ? "border-yellow-500 bg-yellow-500 text-black"
+                      : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-white"
+                  }`}
+                >
+                  {genre.name}
+                </button>
               );
+            })}
+          </div>
 
-              setGenreIds(selectedGenreIds);
-            }}
-            className="min-h-32 w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
-          >
-            {genres.map((genre) => (
-              <option key={genre.id} value={genre.id}>
-                {genre.name}
-              </option>
-            ))}
-          </select>
-
-          <FieldError messages={createErrorDetails.GenreIds} />
+          <FieldError
+            messages={validationErrors.GenreIds ?? createErrorDetails.GenreIds}
+          />
         </div>
 
         <div>
@@ -155,7 +214,9 @@ export function MovieForm() {
             <option value="SPANISH">Spanish</option>
           </select>
 
-          <FieldError messages={createErrorDetails.Language} />
+          <FieldError
+            messages={validationErrors.Language ?? createErrorDetails.Language}
+          />
         </div>
 
         <div>
@@ -187,12 +248,15 @@ export function MovieForm() {
             <input
               id="budget"
               type="number"
-              min="0"
               value={budgetAmount}
               onChange={(event) => setBudgetAmount(event.target.value)}
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
             />
-            {/* <FieldError messages={createErrorDetails.BudgetAmount} /> */}
+            <FieldError
+              messages={
+                validationErrors.BudgetAmount ?? createErrorDetails.BudgetAmount
+              }
+            />
           </div>
 
           <div>
@@ -214,7 +278,11 @@ export function MovieForm() {
               <option value="SEK">SEK</option>
             </select>
 
-            <FieldError messages={createErrorDetails.CurrencyCode} />
+            <FieldError
+              messages={
+                validationErrors.CurrencyCode ?? createErrorDetails.CurrencyCode
+              }
+            />
           </div>
         </div>
 

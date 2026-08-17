@@ -1,15 +1,17 @@
 interface FieldErrorProps {
-  messages?: string[];
+  messages?: string | string[];
 }
 
 export function FieldError({ messages }: FieldErrorProps) {
-  if (!messages?.length) {
+  if (!messages) {
     return null;
   }
 
+  const errorMessages = Array.isArray(messages) ? messages : [messages];
+
   return (
     <div className="mt-1 space-y-1">
-      {messages.map((message) => (
+      {errorMessages.map((message) => (
         <p key={message} className="text-sm text-red-400">
           {message}
         </p>
