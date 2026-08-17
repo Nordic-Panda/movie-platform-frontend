@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getMovies } from "./movieApi";
+import * as movieApi from "./movieApi";
+import type { CreateMovieRequest } from "./types/createMovie";
 import type { Movie } from "./types/movie";
 
 interface MovieState {
@@ -15,8 +16,15 @@ const initialState: MovieState = {
 };
 
 export const fetchMovies = createAsyncThunk("movies/fetchMovies", async () => {
-  return await getMovies();
+  return await movieApi.getMovies();
 });
+
+export const createMovie = createAsyncThunk(
+  "movies/createMovie",
+  async (request: CreateMovieRequest) => {
+    return await movieApi.createMovie(request);
+  },
+);
 
 const movieSlice = createSlice({
   name: "movies",
@@ -35,6 +43,9 @@ const movieSlice = createSlice({
       .addCase(fetchMovies.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message ?? "Failed to load movies";
+      })
+      .addCase(createMovie.fulfilled, (state, action) => {
+        state.items.push(action.payload);
       });
   },
 });

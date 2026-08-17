@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAppDispatch } from "../../../app/hooks";
+import { createMovie } from "../movieSlice";
 
 export function MovieForm() {
   const [title, setTitle] = useState("");
@@ -8,17 +10,22 @@ export function MovieForm() {
   const [budgetAmount, setBudgetAmount] = useState("");
   const [currencyCode, setCurrencyCode] = useState("USD");
 
+  const dispatch = useAppDispatch();
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    console.log({
-      title,
-      durationMinutes: Number(durationMinutes),
-      language,
-      synopsis,
-      budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
-      currencyCode: budgetAmount ? currencyCode : undefined,
-    });
+    dispatch(
+      createMovie({
+        title: title.trim(),
+        durationMinutes: Number(durationMinutes),
+        genreIds: [],
+        language,
+        synopsis: synopsis.trim() || undefined,
+        budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
+        currencyCode: budgetAmount ? currencyCode : undefined,
+      }),
+    );
   }
 
   return (
