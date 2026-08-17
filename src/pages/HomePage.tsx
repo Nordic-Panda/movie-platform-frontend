@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchMovies } from "../features/movies/movieSlice";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
+import { MovieForm } from "../features/movies/components/MovieForm";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -47,6 +48,7 @@ export default function HomePage() {
           </div>
         )}
 
+        <MovieForm />
         {status === "succeeded" && <MovieGrid movies={movies} />}
       </section>
     </main>
