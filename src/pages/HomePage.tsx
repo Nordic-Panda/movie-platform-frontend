@@ -16,12 +16,13 @@ export default function HomePage() {
     dispatch(fetchMovies());
   }, [dispatch]);
 
+  console.log("Movies:", movies);
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="mb-10">
           <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-yellow-500">
-            ForeverYang - MoviePlatform
+            Discover · Watch · Enjoy
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
