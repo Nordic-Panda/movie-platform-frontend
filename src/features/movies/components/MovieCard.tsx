@@ -7,7 +7,7 @@ interface MovieCardProps {
 export function MovieCard({ movie }: MovieCardProps) {
   return (
     <article className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition hover:-translate-y-1 hover:border-zinc-700">
-      <div className="flex aspect-[2/3] items-center justify-center bg-zinc-800">
+      <div className="flex aspect-2/3 items-center justify-center bg-zinc-800">
         <span className="text-4xl font-black text-zinc-700">
           {movie.title.charAt(0)}
         </span>
