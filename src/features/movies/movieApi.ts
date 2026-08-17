@@ -1,5 +1,5 @@
-import type { ApiResponse } from "../types/api";
-import type { Movie } from "../types/movie";
+import type { ApiResponse } from "../../types/api";
+import type { Movie } from "./types/movie";
 
 const API_URL = "http://localhost:5224/api";
 
