@@ -1,8 +1,8 @@
-import type { ApiResponse } from "../../types/api";
+import type { ApiResponse } from "../../shared/types/api";
 import { ApiException } from "../../services/ApiException";
 import type { Movie } from "./types/movie";
 import type { CreateMovieRequest } from "./types/createMovie";
-import type { PagedResult } from "../../types/pagination";
+import type { PagedResult } from "../../shared/types/pageResult";
 
 const API_URL = "http://localhost:5224/api";
 

@@ -3,7 +3,7 @@ import * as movieApi from "./movieApi";
 import type { CreateMovieRequest } from "./types/createMovie";
 import type { Movie } from "./types/movie";
 import { ApiException } from "../../services/ApiException";
-import type { PagedResult } from "../../types/pagination";
+import type { PagedResult } from "../../shared/types/pageResult";
 
 interface MovieState {
   items: Movie[];

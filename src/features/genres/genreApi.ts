@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../types/api";
+import type { ApiResponse } from "../../shared/types/api";
 import type { Genre } from "./types/genre";
 
 const API_URL = "http://localhost:5224/api";
