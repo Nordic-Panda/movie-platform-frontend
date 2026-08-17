@@ -2,11 +2,15 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchMovies } from "../features/movies/movieSlice";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
+import { MovieForm } from "../features/movies/components/MovieForm";
+import { Pagination } from "../shared/components/Pagination";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
 
   const movies = useAppSelector((state) => state.movies.items);
+  const page = useAppSelector((state) => state.movies.page);
+  const totalPages = useAppSelector((state) => state.movies.totalPages);
 
   const status = useAppSelector((state) => state.movies.status);
 
@@ -16,7 +20,10 @@ export default function HomePage() {
     dispatch(fetchMovies());
   }, [dispatch]);
 
-  console.log("Movies:", movies);
+  function handlePageChange(newPage: number) {
+    dispatch(fetchMovies(newPage));
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="mx-auto max-w-7xl px-6 py-12">
@@ -47,7 +54,14 @@ export default function HomePage() {
           </div>
         )}
 
+        <MovieForm />
         {status === "succeeded" && <MovieGrid movies={movies} />}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </section>
     </main>
   );
