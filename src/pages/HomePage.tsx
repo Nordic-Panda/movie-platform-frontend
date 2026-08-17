@@ -1,4 +1,17 @@
+import { useEffect } from "react";
+import { getMovies } from "../services/movieApi";
+
 export default function HomePage() {
+  useEffect(() => {
+    getMovies()
+      .then((movies) => {
+        console.log(movies);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <header className="border-b border-zinc-800">
