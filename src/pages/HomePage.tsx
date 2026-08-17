@@ -1,36 +1,31 @@
 import { useEffect } from "react";
-import { getMovies } from "../services/movieApi";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { fetchMovies } from "../features/movies/movieSlice";
 
 export default function HomePage() {
+  const dispatch = useAppDispatch();
+
+  const movies = useAppSelector((state) => state.movies.items);
+
+  const status = useAppSelector((state) => state.movies.status);
+
+  const error = useAppSelector((state) => state.movies.error);
+
   useEffect(() => {
-    getMovies()
-      .then((movies) => {
-        console.log(movies);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
+    dispatch(fetchMovies());
+  }, [dispatch]);
+
+  console.log(movies);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <header className="border-b border-zinc-800">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <h1 className="text-2xl font-bold text-yellow-400">Movie Platform</h1>
+    <div>
+      <h1>Movies</h1>
 
-          <nav>
-            <a href="/" className="text-sm text-zinc-300 hover:text-white">
-              Movies
-            </a>
-          </nav>
-        </div>
-      </header>
+      {status === "loading" && <p>Loading movies...</p>}
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <h2 className="mb-8 text-4xl font-bold">Movies</h2>
+      {status === "failed" && <p>Failed to load movies: {error}</p>}
 
-        <p className="text-zinc-400">Browse our movie collection.</p>
-      </main>
+      {status === "succeeded" && <p>{movies.length} movies found.</p>}
     </div>
   );
 }
