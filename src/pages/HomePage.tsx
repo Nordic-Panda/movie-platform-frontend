@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchMovies } from "../features/movies/movieSlice";
+import { MovieGrid } from "../features/movies/components/MovieGrid";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -15,17 +16,38 @@ export default function HomePage() {
     dispatch(fetchMovies());
   }, [dispatch]);
 
-  console.log(movies);
-
   return (
-    <div>
-      <h1>Movies</h1>
+    <main className="min-h-screen bg-zinc-950 text-white">
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-10">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-yellow-500">
+            ForeverYang - MoviePlatform
+          </p>
 
-      {status === "loading" && <p>Loading movies...</p>}
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+            Discover Movies
+          </h1>
 
-      {status === "failed" && <p>Failed to load movies: {error}</p>}
+          <p className="mt-3 max-w-2xl text-zinc-400">
+            Explore our collection of movies and discover something worth
+            watching.
+          </p>
+        </div>
 
-      {status === "succeeded" && <p>{movies.length} movies found.</p>}
-    </div>
+        {status === "loading" && (
+          <p className="text-zinc-400">Loading movies...</p>
+        )}
+
+        {status === "failed" && (
+          <div className="rounded-lg border border-red-900 bg-red-950/40 p-5">
+            <p className="font-medium text-red-400">Failed to load movies</p>
+
+            <p className="mt-1 text-sm text-red-300">{error}</p>
+          </div>
+        )}
+
+        {status === "succeeded" && <MovieGrid movies={movies} />}
+      </section>
+    </main>
   );
 }
