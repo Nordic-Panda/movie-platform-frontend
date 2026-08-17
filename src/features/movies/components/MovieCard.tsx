@@ -2,9 +2,10 @@ import type { Movie } from "../types/movie";
 
 interface MovieCardProps {
   movie: Movie;
+  onEdit: (movie: Movie) => void;
 }
 
-export function MovieCard({ movie }: MovieCardProps) {
+export function MovieCard({ movie, onEdit }: MovieCardProps) {
   return (
     <article className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition hover:-translate-y-1 hover:border-zinc-700">
       <div className="flex aspect-2/3 items-center justify-center bg-zinc-800">
@@ -19,7 +20,9 @@ export function MovieCard({ movie }: MovieCardProps) {
         </h2>
 
         <div className="mt-2 flex items-center justify-between text-sm text-zinc-400">
-          <span>{movie.durationMinutes} min</span>
+          <span>
+            {movie.year} · {movie.durationMinutes} min
+          </span>
 
           <span>{movie.language}</span>
         </div>
@@ -40,6 +43,14 @@ export function MovieCard({ movie }: MovieCardProps) {
             ))}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={() => onEdit(movie)}
+          className="mt-4 w-full rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:border-yellow-500 hover:text-yellow-500"
+        >
+          Edit
+        </button>
       </div>
     </article>
   );

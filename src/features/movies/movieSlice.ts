@@ -15,6 +15,10 @@ interface MovieState {
   createError: string | null;
   createErrorDetails: Record<string, string[]>;
 
+  updateStatus: "idle" | "loading" | "succeeded" | "failed";
+  updateError: string | null;
+  updateErrorDetails: Record<string, string[]>;
+
   page: number;
   pageSize: number;
   totalCount: number;
@@ -28,6 +32,10 @@ const initialState: MovieState = {
   createStatus: "idle",
   createError: null,
   createErrorDetails: {},
+
+  updateStatus: "idle",
+  updateError: null,
+  updateErrorDetails: {},
 
   page: 1,
   pageSize: 20,
@@ -55,6 +63,32 @@ export const createMovie = createAsyncThunk<
 >("movies/createMovie", async (request, { rejectWithValue }) => {
   try {
     return await movieApi.createMovie(request);
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return rejectWithValue({
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+    }
+
+    throw error;
+  }
+});
+
+export const updateMovie = createAsyncThunk<
+  Movie,
+  { id: string; request: CreateMovieRequest },
+  {
+    rejectValue: {
+      code: string;
+      message: string;
+      details: Record<string, string[]>;
+    };
+  }
+>("movies/updateMovie", async ({ id, request }, { rejectWithValue }) => {
+  try {
+    return await movieApi.updateMovie(id, request);
   } catch (error) {
     if (error instanceof ApiException) {
       return rejectWithValue({
@@ -111,6 +145,34 @@ const movieSlice = createSlice({
           "Failed to create movie";
 
         state.createErrorDetails = action.payload?.details ?? {};
+      })
+      .addCase(updateMovie.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateError = null;
+        state.updateErrorDetails = {};
+      })
+      .addCase(updateMovie.fulfilled, (state, action) => {
+        state.updateStatus = "succeeded";
+        state.updateError = null;
+        state.updateErrorDetails = {};
+
+        const index = state.items.findIndex(
+          (movie) => movie.id === action.payload.id,
+        );
+
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(updateMovie.rejected, (state, action) => {
+        state.updateStatus = "failed";
+
+        state.updateError =
+          action.payload?.message ??
+          action.error.message ??
+          "Failed to update movie";
+
+        state.updateErrorDetails = action.payload?.details ?? {};
       });
   },
 });

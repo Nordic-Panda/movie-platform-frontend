@@ -1,12 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchMovies } from "../features/movies/movieSlice";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
 import { MovieForm } from "../features/movies/components/MovieForm";
 import { Pagination } from "../shared/components/Pagination";
+import type { Movie } from "../features/movies/types/movie";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+
+  const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>();
 
   const movies = useAppSelector((state) => state.movies.items);
   const page = useAppSelector((state) => state.movies.page);
@@ -54,8 +57,14 @@ export default function HomePage() {
           </div>
         )}
 
-        <MovieForm />
-        {status === "succeeded" && <MovieGrid movies={movies} />}
+        <MovieForm
+          movie={selectedMovie}
+          onCancelEdit={() => setSelectedMovie(undefined)}
+        />
+
+        {status === "succeeded" && (
+          <MovieGrid movies={movies} onEdit={setSelectedMovie} />
+        )}
 
         <Pagination
           currentPage={page}

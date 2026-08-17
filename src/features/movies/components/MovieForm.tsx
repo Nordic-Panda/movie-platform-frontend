@@ -1,18 +1,33 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
-import { createMovie } from "../movieSlice";
+import { createMovie, updateMovie } from "../movieSlice";
 import { FieldError } from "./FieldError";
 import { RequiredLabel } from "./RequiredLabel";
 import { fetchGenres } from "../../genres/genreSlice";
+import type { Movie } from "../types/movie";
 
-export function MovieForm() {
-  const [title, setTitle] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("");
-  const [language, setLanguage] = useState("ENGLISH");
-  const [synopsis, setSynopsis] = useState("");
-  const [budgetAmount, setBudgetAmount] = useState("");
-  const [currencyCode, setCurrencyCode] = useState("USD");
-  const [genreIds, setGenreIds] = useState<string[]>([]);
+interface MovieFormProps {
+  movie?: Movie;
+  onCancelEdit?: () => void;
+}
+
+export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
+  const [title, setTitle] = useState(movie?.title ?? "");
+  const [year, setYear] = useState(
+    String(movie?.year ?? new Date().getFullYear()),
+  );
+  const [durationMinutes, setDurationMinutes] = useState(
+    movie ? String(movie.durationMinutes) : "",
+  );
+  const [language, setLanguage] = useState(movie?.language ?? "ENGLISH");
+  const [synopsis, setSynopsis] = useState(movie?.synopsis ?? "");
+  const [budgetAmount, setBudgetAmount] = useState(
+    movie?.budgetAmount != null ? String(movie.budgetAmount) : "",
+  );
+  const [currencyCode, setCurrencyCode] = useState(movie?.currency ?? "USD");
+  const [genreIds, setGenreIds] = useState<string[]>(
+    movie?.genres.map((genre) => genre.id) ?? [],
+  );
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -27,18 +42,52 @@ export function MovieForm() {
   const genreStatus = useAppSelector((state) => state.genres.status);
 
   const createStatus = useAppSelector((state) => state.movies.createStatus);
-
   const createError = useAppSelector((state) => state.movies.createError);
-
   const createErrorDetails = useAppSelector(
     (state) => state.movies.createErrorDetails,
   );
+
+  const updateStatus = useAppSelector((state) => state.movies.updateStatus);
+  const updateError = useAppSelector((state) => state.movies.updateError);
+  const updateErrorDetails = useAppSelector(
+    (state) => state.movies.updateErrorDetails,
+  );
+
+  const isSubmitting = createStatus === "loading" || updateStatus === "loading";
+
+  const submitError = movie ? updateError : createError;
+  const submitErrorDetails = movie ? updateErrorDetails : createErrorDetails;
 
   useEffect(() => {
     if (genreStatus === "idle") {
       dispatch(fetchGenres());
     }
   }, [dispatch, genreStatus]);
+
+  useEffect(() => {
+    if (movie) {
+      setTitle(movie.title);
+      setYear(String(movie.year));
+      setDurationMinutes(String(movie.durationMinutes));
+      setLanguage(movie.language);
+      setSynopsis(movie.synopsis ?? "");
+      setBudgetAmount(
+        movie.budgetAmount != null ? String(movie.budgetAmount) : "",
+      );
+      setCurrencyCode(movie.currency ?? "USD");
+      setGenreIds(movie.genres.map((genre) => genre.id));
+    } else {
+      setTitle("");
+      setYear(String(new Date().getFullYear()));
+      setDurationMinutes("");
+      setLanguage("ENGLISH");
+      setSynopsis("");
+      setBudgetAmount("");
+      setCurrencyCode("USD");
+      setGenreIds([]);
+      setValidationErrors({});
+    }
+  }, [movie]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +96,19 @@ export function MovieForm() {
 
     if (!title.trim()) {
       errors.Title = "Title is required.";
+    }
+
+    if (!year) {
+      errors.Year = "Year is required.";
+    } else {
+      const movieYear = Number(year);
+      const currentYear = new Date().getFullYear();
+
+      if (!Number.isInteger(movieYear)) {
+        errors.Year = "Year must be a whole number.";
+      } else if (movieYear < 1888 || movieYear > currentYear) {
+        errors.Year = `Year must be between 1888 and ${currentYear}.`;
+      }
     }
 
     if (!durationMinutes) {
@@ -80,26 +142,42 @@ export function MovieForm() {
       return;
     }
 
-    try {
-      await dispatch(
-        createMovie({
-          title: title.trim(),
-          durationMinutes: Number(durationMinutes),
-          genreIds,
-          language,
-          synopsis: synopsis.trim() || undefined,
-          budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
-          currencyCode: budgetAmount ? currencyCode : undefined,
-        }),
-      ).unwrap();
+    setValidationErrors({});
 
-      setTitle("");
-      setDurationMinutes("");
-      setGenreIds([]);
-      setLanguage("ENGLISH");
-      setSynopsis("");
-      setBudgetAmount("");
-      setCurrencyCode("USD");
+    try {
+      const data = {
+        title: title.trim(),
+        year: Number(year),
+        durationMinutes: Number(durationMinutes),
+        genreIds,
+        language,
+        synopsis: synopsis.trim() || undefined,
+        budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
+        currencyCode: budgetAmount ? currencyCode : undefined,
+      };
+
+      if (movie) {
+        await dispatch(
+          updateMovie({
+            id: movie.id,
+            request: data,
+          }),
+        ).unwrap();
+
+        onCancelEdit?.();
+      } else {
+        await dispatch(createMovie(data)).unwrap();
+
+        setTitle("");
+        setYear(String(new Date().getFullYear()));
+        setDurationMinutes("");
+        setGenreIds([]);
+        setLanguage("ENGLISH");
+        setSynopsis("");
+        setBudgetAmount("");
+        setCurrencyCode("USD");
+      }
+
       setValidationErrors({});
     } catch {
       // Redux already stores the error.
@@ -112,9 +190,9 @@ export function MovieForm() {
       onSubmit={handleSubmit}
       className="rounded-lg border border-zinc-800 bg-zinc-900 p-6"
     >
-      {createStatus === "failed" && createError && (
+      {submitError && (
         <div className="rounded-md border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
-          {createError}
+          {submitError}
         </div>
       )}
 
@@ -135,7 +213,25 @@ export function MovieForm() {
           />
 
           <FieldError
-            messages={validationErrors.Title ?? createErrorDetails.Title}
+            messages={validationErrors.Title ?? submitErrorDetails.Title}
+          />
+        </div>
+
+        <div>
+          <RequiredLabel htmlFor="year" required>
+            Year
+          </RequiredLabel>
+
+          <input
+            id="year"
+            type="number"
+            value={year}
+            onChange={(event) => setYear(event.target.value)}
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
+          />
+
+          <FieldError
+            messages={validationErrors.Year ?? submitErrorDetails.Year}
           />
         </div>
 
@@ -155,7 +251,7 @@ export function MovieForm() {
           <FieldError
             messages={
               validationErrors.DurationMinutes ??
-              createErrorDetails.DurationMinutes
+              submitErrorDetails.DurationMinutes
             }
           />
         </div>
@@ -193,7 +289,7 @@ export function MovieForm() {
           </div>
 
           <FieldError
-            messages={validationErrors.GenreIds ?? createErrorDetails.GenreIds}
+            messages={validationErrors.GenreIds ?? submitErrorDetails.GenreIds}
           />
         </div>
 
@@ -215,7 +311,7 @@ export function MovieForm() {
           </select>
 
           <FieldError
-            messages={validationErrors.Language ?? createErrorDetails.Language}
+            messages={validationErrors.Language ?? submitErrorDetails.Language}
           />
         </div>
 
@@ -254,7 +350,7 @@ export function MovieForm() {
             />
             <FieldError
               messages={
-                validationErrors.BudgetAmount ?? createErrorDetails.BudgetAmount
+                validationErrors.BudgetAmount ?? submitErrorDetails.BudgetAmount
               }
             />
           </div>
@@ -280,19 +376,31 @@ export function MovieForm() {
 
             <FieldError
               messages={
-                validationErrors.CurrencyCode ?? createErrorDetails.CurrencyCode
+                validationErrors.CurrencyCode ?? submitErrorDetails.CurrencyCode
               }
             />
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={createStatus === "loading"}
-          className="rounded-md bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400"
-        >
-          Add Movie
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400"
+          >
+            {movie ? "Update Movie" : "Add Movie"}
+          </button>
+
+          {movie && onCancelEdit && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              className="rounded-md border border-zinc-700 px-5 py-2 font-semibold text-zinc-300 hover:bg-zinc-800"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
     </form>
   );

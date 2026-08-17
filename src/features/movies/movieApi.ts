@@ -43,3 +43,28 @@ export async function createMovie(request: CreateMovieRequest): Promise<Movie> {
 
   return result.data;
 }
+
+export async function updateMovie(
+  id: string,
+  request: CreateMovieRequest,
+): Promise<Movie> {
+  const response = await fetch(`${API_URL}/movies/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  const result: ApiResponse<Movie> = await response.json();
+
+  if (!result.success) {
+    throw new ApiException(
+      result.error.code,
+      result.error.message,
+      result.error.details,
+    );
+  }
+
+  return result.data;
+}
