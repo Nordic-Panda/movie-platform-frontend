@@ -3,6 +3,7 @@ import * as movieApi from "./movieApi";
 import type { CreateMovieRequest } from "./types/createMovie";
 import type { Movie } from "./types/movie";
 import { ApiException } from "../../services/ApiException";
+import type { PagedResult } from "../../types/pagination";
 
 interface MovieState {
   items: Movie[];
@@ -13,6 +14,11 @@ interface MovieState {
   createStatus: "idle" | "loading" | "succeeded" | "failed";
   createError: string | null;
   createErrorDetails: Record<string, string[]>;
+
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 const initialState: MovieState = {
@@ -22,10 +28,18 @@ const initialState: MovieState = {
   createStatus: "idle",
   createError: null,
   createErrorDetails: {},
+
+  page: 1,
+  pageSize: 20,
+  totalCount: 0,
+  totalPages: 0,
 };
 
-export const fetchMovies = createAsyncThunk("movies/fetchMovies", async () => {
-  return await movieApi.getMovies();
+export const fetchMovies = createAsyncThunk<
+  PagedResult<Movie>,
+  number | undefined
+>("movies/fetchMovies", async (page: number = 1) => {
+  return await movieApi.getMovies(page);
 });
 
 export const createMovie = createAsyncThunk<
@@ -66,7 +80,11 @@ const movieSlice = createSlice({
       })
       .addCase(fetchMovies.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = action.payload;
+        state.items = action.payload.items;
+        state.page = action.payload.page;
+        state.pageSize = action.payload.pageSize;
+        state.totalCount = action.payload.totalCount;
+        state.totalPages = action.payload.totalPages;
       })
       .addCase(fetchMovies.rejected, (state, action) => {
         state.status = "failed";
