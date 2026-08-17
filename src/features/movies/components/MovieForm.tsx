@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { createMovie } from "../movieSlice";
 import { FieldError } from "./FieldError";
+import { RequiredLabel } from "./RequiredLabel";
+import { fetchGenres } from "../../genres/genreSlice";
 
 export function MovieForm() {
   const [title, setTitle] = useState("");
@@ -10,8 +12,13 @@ export function MovieForm() {
   const [synopsis, setSynopsis] = useState("");
   const [budgetAmount, setBudgetAmount] = useState("");
   const [currencyCode, setCurrencyCode] = useState("USD");
+  const [genreIds, setGenreIds] = useState<string[]>([]);
 
   const dispatch = useAppDispatch();
+
+  const genres = useAppSelector((state) => state.genres.items);
+
+  const genreStatus = useAppSelector((state) => state.genres.status);
 
   const createStatus = useAppSelector((state) => state.movies.createStatus);
 
@@ -21,6 +28,12 @@ export function MovieForm() {
     (state) => state.movies.createErrorDetails,
   );
 
+  useEffect(() => {
+    if (genreStatus === "idle") {
+      dispatch(fetchGenres());
+    }
+  }, [dispatch, genreStatus]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -29,7 +42,7 @@ export function MovieForm() {
         createMovie({
           title: title.trim(),
           durationMinutes: Number(durationMinutes),
-          genreIds: [],
+          genreIds,
           language,
           synopsis: synopsis.trim() || undefined,
           budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
@@ -39,6 +52,7 @@ export function MovieForm() {
 
       setTitle("");
       setDurationMinutes("");
+      setGenreIds([]);
       setLanguage("ENGLISH");
       setSynopsis("");
       setBudgetAmount("");
@@ -63,12 +77,9 @@ export function MovieForm() {
 
       <div className="mt-6 space-y-5">
         <div>
-          <label
-            htmlFor="title"
-            className="mb-2 block text-sm font-medium text-zinc-300"
-          >
+          <RequiredLabel htmlFor="title" required>
             Title
-          </label>
+          </RequiredLabel>
 
           <input
             id="title"
@@ -82,12 +93,9 @@ export function MovieForm() {
         </div>
 
         <div>
-          <label
-            htmlFor="duration"
-            className="mb-2 block text-sm font-medium text-zinc-300"
-          >
+          <RequiredLabel htmlFor="duration" required>
             Duration
-          </label>
+          </RequiredLabel>
 
           <input
             id="duration"
@@ -102,12 +110,38 @@ export function MovieForm() {
         </div>
 
         <div>
-          <label
-            htmlFor="language"
-            className="mb-2 block text-sm font-medium text-zinc-300"
+          <RequiredLabel htmlFor="genres" required>
+            Genres
+          </RequiredLabel>
+
+          <select
+            id="genres"
+            multiple
+            value={genreIds}
+            onChange={(event) => {
+              const selectedGenreIds = Array.from(
+                event.target.selectedOptions,
+                (option) => option.value,
+              );
+
+              setGenreIds(selectedGenreIds);
+            }}
+            className="min-h-32 w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
           >
+            {genres.map((genre) => (
+              <option key={genre.id} value={genre.id}>
+                {genre.name}
+              </option>
+            ))}
+          </select>
+
+          <FieldError messages={createErrorDetails.GenreIds} />
+        </div>
+
+        <div>
+          <RequiredLabel htmlFor="language" required>
             Language
-          </label>
+          </RequiredLabel>
 
           <select
             id="language"

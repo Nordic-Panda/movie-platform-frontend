@@ -1,4 +1,4 @@
-import type { Genre } from "./genre";
+import type { Genre } from "../../genres/types/genre";
 
 export interface Movie {
   id: string;
