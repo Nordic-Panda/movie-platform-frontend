@@ -8,8 +8,9 @@ import type { PagedResult } from "../../shared/types/pageResult";
 interface MovieState {
   items: Movie[];
 
-  status: "idle" | "loading" | "succeeded" | "failed";
-  error: string | null;
+  fetchStatus: "idle" | "loading" | "succeeded" | "failed";
+  fetchError: string | null;
+  fetchErrorDetails: Record<string, string[]>;
 
   createStatus: "idle" | "loading" | "succeeded" | "failed";
   createError: string | null;
@@ -19,16 +20,23 @@ interface MovieState {
   updateError: string | null;
   updateErrorDetails: Record<string, string[]>;
 
+  deleteStatus: "idle" | "loading" | "succeeded" | "failed";
+  deleteError: string | null;
+  deleteErrorDetails: Record<string, string[]>;
+
   page: number;
-  pageSize: number;
+  //pageSize: number;
   totalCount: number;
   totalPages: number;
 }
 
 const initialState: MovieState = {
   items: [],
-  status: "idle",
-  error: null,
+
+  fetchStatus: "idle",
+  fetchError: null,
+  fetchErrorDetails: {},
+
   createStatus: "idle",
   createError: null,
   createErrorDetails: {},
@@ -37,17 +45,41 @@ const initialState: MovieState = {
   updateError: null,
   updateErrorDetails: {},
 
+  deleteStatus: "idle",
+  deleteError: null,
+  deleteErrorDetails: {},
+
   page: 1,
-  pageSize: 20,
+  // PageSize is decided in BE appsettings
+  // pageSize: 20,
   totalCount: 0,
   totalPages: 0,
 };
 
 export const fetchMovies = createAsyncThunk<
   PagedResult<Movie>,
-  number | undefined
->("movies/fetchMovies", async (page: number = 1) => {
-  return await movieApi.getMovies(page);
+  number | undefined,
+  {
+    rejectValue: {
+      code: string;
+      message: string;
+      details: Record<string, string[]>;
+    };
+  }
+>("movies/fetchMovies", async (page: number = 1, { rejectWithValue }) => {
+  try {
+    return await movieApi.getMovies(page);
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return rejectWithValue({
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+    }
+
+    throw error;
+  }
 });
 
 export const createMovie = createAsyncThunk<
@@ -102,6 +134,32 @@ export const updateMovie = createAsyncThunk<
   }
 });
 
+export const deleteMovie = createAsyncThunk<
+  void,
+  string,
+  {
+    rejectValue: {
+      code: string;
+      message: string;
+      details: Record<string, string[]>;
+    };
+  }
+>("movies/deleteMovie", async (id, { rejectWithValue }) => {
+  try {
+    await movieApi.deleteMovie(id);
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return rejectWithValue({
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+    }
+
+    throw error;
+  }
+});
+
 const movieSlice = createSlice({
   name: "movies",
   initialState,
@@ -109,20 +167,26 @@ const movieSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchMovies.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
+        state.fetchStatus = "loading";
+        state.fetchError = null;
       })
       .addCase(fetchMovies.fulfilled, (state, action) => {
-        state.status = "succeeded";
+        state.fetchStatus = "succeeded";
         state.items = action.payload.items;
         state.page = action.payload.page;
-        state.pageSize = action.payload.pageSize;
+        //state.pageSize = action.payload.pageSize;
         state.totalCount = action.payload.totalCount;
         state.totalPages = action.payload.totalPages;
       })
       .addCase(fetchMovies.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message ?? "Failed to load movies";
+        state.fetchStatus = "failed";
+
+        state.fetchError =
+          action.payload?.message ??
+          action.error.message ??
+          "Failed to load movies";
+
+        state.fetchErrorDetails = action.payload?.details ?? {};
       })
       .addCase(createMovie.pending, (state) => {
         state.createStatus = "loading";
@@ -173,6 +237,30 @@ const movieSlice = createSlice({
           "Failed to update movie";
 
         state.updateErrorDetails = action.payload?.details ?? {};
+      })
+      .addCase(deleteMovie.pending, (state) => {
+        state.deleteStatus = "loading";
+        state.deleteError = null;
+        state.deleteErrorDetails = {};
+      })
+      .addCase(deleteMovie.fulfilled, (state, action) => {
+        state.deleteStatus = "succeeded";
+        state.deleteError = null;
+        state.deleteErrorDetails = {};
+
+        state.items = state.items.filter(
+          (movie) => movie.id !== action.meta.arg,
+        );
+      })
+      .addCase(deleteMovie.rejected, (state, action) => {
+        state.deleteStatus = "failed";
+
+        state.deleteError =
+          action.payload?.message ??
+          action.error.message ??
+          "Failed to delete movie";
+
+        state.deleteErrorDetails = action.payload?.details ?? {};
       });
   },
 });

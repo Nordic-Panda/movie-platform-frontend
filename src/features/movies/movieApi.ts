@@ -68,3 +68,19 @@ export async function updateMovie(
 
   return result.data;
 }
+
+export async function deleteMovie(id: string): Promise<void> {
+  const response = await fetch(`${API_URL}/movies/${id}`, {
+    method: "DELETE",
+  });
+
+  const result: ApiResponse<string> = await response.json();
+
+  if (!result.success) {
+    throw new ApiException(
+      result.error.code,
+      result.error.message,
+      result.error.details,
+    );
+  }
+}

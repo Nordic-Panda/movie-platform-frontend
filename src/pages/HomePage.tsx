@@ -15,9 +15,9 @@ export default function HomePage() {
   const page = useAppSelector((state) => state.movies.page);
   const totalPages = useAppSelector((state) => state.movies.totalPages);
 
-  const status = useAppSelector((state) => state.movies.status);
+  const status = useAppSelector((state) => state.movies.fetchStatus);
 
-  const error = useAppSelector((state) => state.movies.error);
+  const error = useAppSelector((state) => state.movies.fetchError);
 
   useEffect(() => {
     dispatch(fetchMovies());
