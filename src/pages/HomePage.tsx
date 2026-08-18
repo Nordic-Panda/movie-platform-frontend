@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { fetchMovies } from "../features/movies/movieSlice";
+import { deleteMovie, fetchMovies } from "../features/movies/movieSlice";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
 import { MovieForm } from "../features/movies/components/MovieForm";
 import { Pagination } from "../shared/components/Pagination";
 import type { Movie } from "../features/movies/types/movie";
+import { DeleteMovieModal } from "../features/movies/components/DeleteMovieModal";
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
 
   const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>();
+  const [movieToDelete, setMovieToDelete] = useState<Movie | undefined>();
 
   const movies = useAppSelector((state) => state.movies.items);
   const page = useAppSelector((state) => state.movies.page);
   const totalPages = useAppSelector((state) => state.movies.totalPages);
 
   const status = useAppSelector((state) => state.movies.fetchStatus);
-
   const error = useAppSelector((state) => state.movies.fetchError);
+
+  const deleteStatus = useAppSelector((state) => state.movies.deleteStatus);
+  const deleteError = useAppSelector((state) => state.movies.deleteError);
 
   useEffect(() => {
     dispatch(fetchMovies());
@@ -25,6 +29,38 @@ export default function HomePage() {
 
   function handlePageChange(newPage: number) {
     dispatch(fetchMovies(newPage));
+  }
+
+  function handleEdit(movie: Movie) {
+    setSelectedMovie(movie);
+  }
+
+  function handleDelete(id: string) {
+    const movie = movies.find((movie) => movie.id === id);
+
+    if (!movie) {
+      return;
+    }
+
+    setMovieToDelete(movie);
+  }
+
+  async function confirmDelete() {
+    if (!movieToDelete) {
+      return;
+    }
+
+    try {
+      await dispatch(deleteMovie(movieToDelete.id)).unwrap();
+
+      if (selectedMovie?.id === movieToDelete.id) {
+        setSelectedMovie(undefined);
+      }
+
+      setMovieToDelete(undefined);
+    } catch {
+      // Redux already stores the error.
+    }
   }
 
   return (
@@ -57,13 +93,25 @@ export default function HomePage() {
           </div>
         )}
 
+        {deleteStatus === "failed" && deleteError && (
+          <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-5">
+            <p className="font-medium text-red-400">Failed to delete movie</p>
+
+            <p className="mt-1 text-sm text-red-300">{deleteError}</p>
+          </div>
+        )}
+
         <MovieForm
           movie={selectedMovie}
           onCancelEdit={() => setSelectedMovie(undefined)}
         />
 
         {status === "succeeded" && (
-          <MovieGrid movies={movies} onEdit={setSelectedMovie} />
+          <MovieGrid
+            movies={movies}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         )}
 
         <Pagination
@@ -72,6 +120,14 @@ export default function HomePage() {
           onPageChange={handlePageChange}
         />
       </section>
+
+      {movieToDelete && (
+        <DeleteMovieModal
+          movieTitle={movieToDelete.title}
+          onCancel={() => setMovieToDelete(undefined)}
+          onConfirm={confirmDelete}
+        />
+      )}
     </main>
   );
 }

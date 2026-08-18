@@ -4,13 +4,19 @@ import { MovieCard } from "./MovieCard";
 interface MovieGridProps {
   movies: Movie[];
   onEdit: (movie: Movie) => void;
+  onDelete: (id: string) => void;
 }
 
-export function MovieGrid({ movies, onEdit }: MovieGridProps) {
+export function MovieGrid({ movies, onEdit, onDelete }: MovieGridProps) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} onEdit={onEdit} />
+        <MovieCard
+          key={movie.id}
+          movie={movie}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );
