@@ -5,6 +5,7 @@ import { FieldError } from "./FieldError";
 import { RequiredLabel } from "./RequiredLabel";
 import { fetchGenres } from "../../genres/genreSlice";
 import type { Movie } from "../types/movie";
+import { fetchLanguages } from "../../languages/languageSlice";
 
 interface MovieFormProps {
   movie?: Movie;
@@ -19,7 +20,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
   const [durationMinutes, setDurationMinutes] = useState(
     movie ? String(movie.durationMinutes) : "",
   );
-  const [language, setLanguage] = useState(movie?.language ?? "ENGLISH");
+  const [languageId, setLanguageId] = useState(movie?.language?.id ?? "");
   const [synopsis, setSynopsis] = useState(movie?.synopsis ?? "");
   const [budgetAmount, setBudgetAmount] = useState(
     movie?.budgetAmount != null ? String(movie.budgetAmount) : "",
@@ -64,12 +65,21 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
     }
   }, [dispatch, genreStatus]);
 
+  const languageStatus = useAppSelector((state) => state.languages.fetchStatus);
+  const languages = useAppSelector((state) => state.languages.items);
+
+  useEffect(() => {
+    if (languageStatus === "idle") {
+      dispatch(fetchLanguages());
+    }
+  }, [dispatch, languageStatus]);
+
   useEffect(() => {
     if (movie) {
       setTitle(movie.title);
       setYear(String(movie.year));
       setDurationMinutes(String(movie.durationMinutes));
-      setLanguage(movie.language);
+      setLanguageId(movie.language.id);
       setSynopsis(movie.synopsis ?? "");
       setBudgetAmount(
         movie.budgetAmount != null ? String(movie.budgetAmount) : "",
@@ -80,7 +90,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       setTitle("");
       setYear(String(new Date().getFullYear()));
       setDurationMinutes("");
-      setLanguage("ENGLISH");
+      setLanguageId("");
       setSynopsis("");
       setBudgetAmount("");
       setCurrencyCode("USD");
@@ -117,8 +127,8 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       errors.DurationMinutes = "Duration must be at least 1 minute.";
     }
 
-    if (!language) {
-      errors.Language = "Language is required.";
+    if (!languageId) {
+      errors.LanguageId = "Language is required.";
     }
 
     if (genreIds.length === 0) {
@@ -150,7 +160,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         year: Number(year),
         durationMinutes: Number(durationMinutes),
         genreIds,
-        language,
+        languageId,
         synopsis: synopsis.trim() || undefined,
         budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
         currencyCode: budgetAmount ? currencyCode : undefined,
@@ -172,7 +182,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         setYear(String(new Date().getFullYear()));
         setDurationMinutes("");
         setGenreIds([]);
-        setLanguage("ENGLISH");
+        setLanguageId("");
         setSynopsis("");
         setBudgetAmount("");
         setCurrencyCode("USD");
@@ -300,18 +310,23 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
 
           <select
             id="language"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
+            value={languageId}
+            onChange={(event) => setLanguageId(event.target.value)}
             className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
           >
-            <option value="ENGLISH">English</option>
-            <option value="FRENCH">French</option>
-            <option value="GERMAN">German</option>
-            <option value="SPANISH">Spanish</option>
+            <option value="">Select language</option>
+
+            {languages.map((language) => (
+              <option key={language.id} value={language.id}>
+                {language.name}
+              </option>
+            ))}
           </select>
 
           <FieldError
-            messages={validationErrors.Language ?? submitErrorDetails.Language}
+            messages={
+              validationErrors.LanguageId ?? submitErrorDetails.LanguageId
+            }
           />
         </div>
 
