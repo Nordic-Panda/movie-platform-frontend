@@ -7,4 +7,5 @@ export interface CreateMovieRequest {
   synopsis?: string;
   budgetAmount?: number;
   currencyCode?: string;
+  posterUrl?: string;
 }

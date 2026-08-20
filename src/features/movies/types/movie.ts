@@ -6,9 +6,13 @@ export interface Movie {
   title: string;
   year: number;
   durationMinutes: number;
+
   genres: Genre[];
+
   language: Language;
+
   synopsis: string | null;
   budgetAmount: number | null;
-  currency: string | null;
+  currencyCode: string | null;
+  posterUrl: string | null;
 }
