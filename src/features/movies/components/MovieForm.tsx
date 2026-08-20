@@ -6,6 +6,7 @@ import { RequiredLabel } from "./RequiredLabel";
 import { fetchGenres } from "../../genres/genreSlice";
 import type { Movie } from "../types/movie";
 import { fetchLanguages } from "../../languages/languageSlice";
+import { fetchCurrencies } from "../../currencies/currencySlice";
 
 interface MovieFormProps {
   movie?: Movie;
@@ -14,7 +15,6 @@ interface MovieFormProps {
 
 export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
   const MAX_BUDGET = 9_999_999_999_999_999.99;
-  const DEFAULT_CURRENCYCODE = "USD";
 
   const [title, setTitle] = useState(movie?.title ?? "");
 
@@ -34,9 +34,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
     movie?.budgetAmount != null ? String(movie.budgetAmount) : "",
   );
 
-  const [currencyCode, setCurrencyCode] = useState(
-    movie?.currencyCode ?? DEFAULT_CURRENCYCODE,
-  );
+  const [currencyCode, setCurrencyCode] = useState(movie?.currencyCode ?? "");
 
   const [posterUrl, setPosterUrl] = useState(movie?.posterUrl ?? "");
 
@@ -55,6 +53,11 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
 
   const languages = useAppSelector((state) => state.languages.items);
   const languageStatus = useAppSelector((state) => state.languages.fetchStatus);
+
+  const currencies = useAppSelector((state) => state.currencies.items);
+  const currencyStatus = useAppSelector(
+    (state) => state.currencies.fetchStatus,
+  );
 
   const createStatus = useAppSelector((state) => state.movies.createStatus);
 
@@ -91,6 +94,12 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
   }, [dispatch, languageStatus]);
 
   useEffect(() => {
+    if (currencyStatus === "idle") {
+      dispatch(fetchCurrencies());
+    }
+  }, [dispatch, currencyStatus]);
+
+  useEffect(() => {
     if (movie) {
       setTitle(movie.title);
       setYear(String(movie.year));
@@ -102,7 +111,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         movie.budgetAmount != null ? String(movie.budgetAmount) : "",
       );
 
-      setCurrencyCode(movie.currencyCode ?? "USD");
+      setCurrencyCode(movie.currencyCode ?? "");
 
       setPosterUrl(movie.posterUrl ?? "");
 
@@ -114,7 +123,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       setLanguageId("");
       setSynopsis("");
       setBudgetAmount("");
-      setCurrencyCode("USD");
+      setCurrencyCode("");
       setPosterUrl("");
       setGenreIds([]);
       setValidationErrors({});
@@ -212,7 +221,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         setLanguageId("");
         setSynopsis("");
         setBudgetAmount("");
-        setCurrencyCode("USD");
+        setCurrencyCode("");
         setPosterUrl("");
       }
 
@@ -239,7 +248,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       </h2>
 
       <div className="mt-6 space-y-5">
-        {/* Title */}
         <div>
           <RequiredLabel htmlFor="title" required>
             Title
@@ -258,7 +266,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Year */}
         <div>
           <RequiredLabel htmlFor="year" required>
             Year
@@ -277,7 +284,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Duration */}
         <div>
           <RequiredLabel htmlFor="duration" required>
             Duration
@@ -299,7 +305,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Genres */}
         <div>
           <RequiredLabel htmlFor="genres" required>
             Genres
@@ -320,7 +325,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
                         : [...current, genre.id],
                     );
                   }}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition ${
                     isSelected
                       ? "border-yellow-500 bg-yellow-500 text-black"
                       : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-white"
@@ -337,7 +342,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Language */}
         <div>
           <RequiredLabel htmlFor="language" required>
             Language
@@ -365,7 +369,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Synopsis */}
         <div>
           <label
             htmlFor="synopsis"
@@ -383,7 +386,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Budget + Currency */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -420,14 +422,19 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
               id="currency"
               value={currencyCode}
               onChange={(event) => setCurrencyCode(event.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
+              className="cursor-pointer w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
             >
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="SEK">SEK</option>
-              <option value="DKK">DKK</option>
-              <option value="CNY">CNY</option>
-              <option value="JPY">JPY</option>
+              <option value="">Select currency</option>
+
+              {currencies.map((currency) => (
+                <option
+                  className="cursor-pointer"
+                  key={currency.code}
+                  value={currency.code}
+                >
+                  {currency.name} ({currency.code})
+                </option>
+              ))}
             </select>
 
             <FieldError
@@ -438,7 +445,6 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           </div>
         </div>
 
-        {/* Poster URL */}
         <div>
           <label
             htmlFor="posterUrl"
@@ -457,12 +463,11 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md cursor-pointer bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? "Saving..." : movie ? "Update Movie" : "Add Movie"}
           </button>
