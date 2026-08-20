@@ -25,7 +25,6 @@ interface MovieState {
   deleteErrorDetails: Record<string, string[]>;
 
   page: number;
-  //pageSize: number;
   totalCount: number;
   totalPages: number;
 }
@@ -50,8 +49,6 @@ const initialState: MovieState = {
   deleteErrorDetails: {},
 
   page: 1,
-  // PageSize is decided in BE appsettings
-  // pageSize: 20,
   totalCount: 0,
   totalPages: 0,
 };
@@ -163,21 +160,32 @@ export const deleteMovie = createAsyncThunk<
 const movieSlice = createSlice({
   name: "movies",
   initialState,
-  reducers: {},
+
+  reducers: {
+    resetCreateStatus: (state) => {
+      state.createStatus = "idle";
+      state.createError = null;
+      state.createErrorDetails = {};
+    },
+  },
+
   extraReducers: (builder) => {
     builder
       .addCase(fetchMovies.pending, (state) => {
         state.fetchStatus = "loading";
         state.fetchError = null;
+        state.fetchErrorDetails = {};
       })
+
       .addCase(fetchMovies.fulfilled, (state, action) => {
         state.fetchStatus = "succeeded";
+
         state.items = action.payload.items;
         state.page = action.payload.page;
-        //state.pageSize = action.payload.pageSize;
         state.totalCount = action.payload.totalCount;
         state.totalPages = action.payload.totalPages;
       })
+
       .addCase(fetchMovies.rejected, (state, action) => {
         state.fetchStatus = "failed";
 
@@ -193,13 +201,13 @@ const movieSlice = createSlice({
         state.createError = null;
         state.createErrorDetails = {};
       })
+
       .addCase(createMovie.fulfilled, (state, action) => {
         state.createStatus = "succeeded";
         state.createError = null;
         state.createErrorDetails = {};
-
-        state.items.push(action.payload);
       })
+
       .addCase(createMovie.rejected, (state, action) => {
         state.createStatus = "failed";
 
@@ -210,11 +218,13 @@ const movieSlice = createSlice({
 
         state.createErrorDetails = action.payload?.details ?? {};
       })
+
       .addCase(updateMovie.pending, (state) => {
         state.updateStatus = "loading";
         state.updateError = null;
         state.updateErrorDetails = {};
       })
+
       .addCase(updateMovie.fulfilled, (state, action) => {
         state.updateStatus = "succeeded";
         state.updateError = null;
@@ -228,6 +238,7 @@ const movieSlice = createSlice({
           state.items[index] = action.payload;
         }
       })
+
       .addCase(updateMovie.rejected, (state, action) => {
         state.updateStatus = "failed";
 
@@ -243,6 +254,7 @@ const movieSlice = createSlice({
         state.deleteError = null;
         state.deleteErrorDetails = {};
       })
+
       .addCase(deleteMovie.fulfilled, (state, action) => {
         state.deleteStatus = "succeeded";
         state.deleteError = null;
@@ -252,6 +264,7 @@ const movieSlice = createSlice({
           (movie) => movie.id !== action.meta.arg,
         );
       })
+
       .addCase(deleteMovie.rejected, (state, action) => {
         state.deleteStatus = "failed";
 
@@ -264,5 +277,7 @@ const movieSlice = createSlice({
       });
   },
 });
+
+export const { resetCreateStatus } = movieSlice.actions;
 
 export default movieSlice.reducer;
