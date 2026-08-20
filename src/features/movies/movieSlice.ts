@@ -171,10 +171,6 @@ const movieSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // =========================
-      // FETCH MOVIES
-      // =========================
-
       .addCase(fetchMovies.pending, (state) => {
         state.fetchStatus = "loading";
         state.fetchError = null;
@@ -200,11 +196,6 @@ const movieSlice = createSlice({
 
         state.fetchErrorDetails = action.payload?.details ?? {};
       })
-
-      // =========================
-      // CREATE MOVIE
-      // =========================
-
       .addCase(createMovie.pending, (state) => {
         state.createStatus = "loading";
         state.createError = null;
@@ -215,14 +206,6 @@ const movieSlice = createSlice({
         state.createStatus = "succeeded";
         state.createError = null;
         state.createErrorDetails = {};
-
-        /*
-         * We intentionally do NOT push the newly-created movie here.
-         *
-         * The backend is responsible for pagination/order.
-         *
-         * HomePage will fetch the current page again after creation.
-         */
       })
 
       .addCase(createMovie.rejected, (state, action) => {
@@ -235,10 +218,6 @@ const movieSlice = createSlice({
 
         state.createErrorDetails = action.payload?.details ?? {};
       })
-
-      // =========================
-      // UPDATE MOVIE
-      // =========================
 
       .addCase(updateMovie.pending, (state) => {
         state.updateStatus = "loading";
@@ -270,11 +249,6 @@ const movieSlice = createSlice({
 
         state.updateErrorDetails = action.payload?.details ?? {};
       })
-
-      // =========================
-      // DELETE MOVIE
-      // =========================
-
       .addCase(deleteMovie.pending, (state) => {
         state.deleteStatus = "loading";
         state.deleteError = null;
