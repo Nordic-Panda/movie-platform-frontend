@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { deleteMovie, fetchMovies } from "../features/movies/movieSlice";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
@@ -13,6 +13,9 @@ export default function HomePage() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>();
   const [movieToDelete, setMovieToDelete] = useState<Movie | undefined>();
 
+  const moviesListRef = useRef<HTMLDivElement>(null);
+  const previousPageRef = useRef<number | null>(null);
+
   const movies = useAppSelector((state) => state.movies.items);
   const page = useAppSelector((state) => state.movies.page);
   const totalPages = useAppSelector((state) => state.movies.totalPages);
@@ -26,6 +29,39 @@ export default function HomePage() {
   useEffect(() => {
     dispatch(fetchMovies());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (status !== "succeeded") {
+      return;
+    }
+
+    // First successful load.
+    // Do not scroll when the page is initially loaded or refreshed.
+    if (previousPageRef.current === null) {
+      previousPageRef.current = page;
+      return;
+    }
+
+    // Page has not actually changed.
+    if (previousPageRef.current === page) {
+      return;
+    }
+
+    previousPageRef.current = page;
+
+    const element = moviesListRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const top = element.getBoundingClientRect().top + window.scrollY - 32;
+
+    window.scrollTo({
+      top,
+      behavior: "smooth",
+    });
+  }, [page, status]);
 
   function handlePageChange(newPage: number) {
     dispatch(fetchMovies(newPage));
@@ -106,13 +142,15 @@ export default function HomePage() {
           onCancelEdit={() => setSelectedMovie(undefined)}
         />
 
-        {status === "succeeded" && (
-          <MovieGrid
-            movies={movies}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        )}
+        <div ref={moviesListRef} className="scroll-mt-8">
+          {status === "succeeded" && (
+            <MovieGrid
+              movies={movies}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          )}
+        </div>
 
         <Pagination
           currentPage={page}

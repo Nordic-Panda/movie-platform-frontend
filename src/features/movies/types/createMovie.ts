@@ -3,8 +3,9 @@ export interface CreateMovieRequest {
   year: number;
   durationMinutes: number;
   genreIds: string[];
-  language: string;
+  languageId: string;
   synopsis?: string;
   budgetAmount?: number;
   currencyCode?: string;
+  posterUrl?: string;
 }

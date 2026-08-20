@@ -5,6 +5,7 @@ import { FieldError } from "./FieldError";
 import { RequiredLabel } from "./RequiredLabel";
 import { fetchGenres } from "../../genres/genreSlice";
 import type { Movie } from "../types/movie";
+import { fetchLanguages } from "../../languages/languageSlice";
 
 interface MovieFormProps {
   movie?: Movie;
@@ -12,19 +13,33 @@ interface MovieFormProps {
 }
 
 export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
+  const MAX_BUDGET = 9_999_999_999_999_999.99;
+  const DEFAULT_CURRENCYCODE = "USD";
+
   const [title, setTitle] = useState(movie?.title ?? "");
+
   const [year, setYear] = useState(
     String(movie?.year ?? new Date().getFullYear()),
   );
+
   const [durationMinutes, setDurationMinutes] = useState(
     movie ? String(movie.durationMinutes) : "",
   );
-  const [language, setLanguage] = useState(movie?.language ?? "ENGLISH");
+
+  const [languageId, setLanguageId] = useState(movie?.language?.id ?? "");
+
   const [synopsis, setSynopsis] = useState(movie?.synopsis ?? "");
+
   const [budgetAmount, setBudgetAmount] = useState(
     movie?.budgetAmount != null ? String(movie.budgetAmount) : "",
   );
-  const [currencyCode, setCurrencyCode] = useState(movie?.currency ?? "USD");
+
+  const [currencyCode, setCurrencyCode] = useState(
+    movie?.currencyCode ?? DEFAULT_CURRENCYCODE,
+  );
+
+  const [posterUrl, setPosterUrl] = useState(movie?.posterUrl ?? "");
+
   const [genreIds, setGenreIds] = useState<string[]>(
     movie?.genres.map((genre) => genre.id) ?? [],
   );
@@ -33,22 +48,26 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
     Record<string, string>
   >({});
 
-  const MAX_BUDGET = 9_999_999_999_999_999.99;
-
   const dispatch = useAppDispatch();
 
   const genres = useAppSelector((state) => state.genres.items);
-
   const genreStatus = useAppSelector((state) => state.genres.status);
 
+  const languages = useAppSelector((state) => state.languages.items);
+  const languageStatus = useAppSelector((state) => state.languages.fetchStatus);
+
   const createStatus = useAppSelector((state) => state.movies.createStatus);
+
   const createError = useAppSelector((state) => state.movies.createError);
+
   const createErrorDetails = useAppSelector(
     (state) => state.movies.createErrorDetails,
   );
 
   const updateStatus = useAppSelector((state) => state.movies.updateStatus);
+
   const updateError = useAppSelector((state) => state.movies.updateError);
+
   const updateErrorDetails = useAppSelector(
     (state) => state.movies.updateErrorDetails,
   );
@@ -56,6 +75,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
   const isSubmitting = createStatus === "loading" || updateStatus === "loading";
 
   const submitError = movie ? updateError : createError;
+
   const submitErrorDetails = movie ? updateErrorDetails : createErrorDetails;
 
   useEffect(() => {
@@ -65,25 +85,37 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
   }, [dispatch, genreStatus]);
 
   useEffect(() => {
+    if (languageStatus === "idle") {
+      dispatch(fetchLanguages());
+    }
+  }, [dispatch, languageStatus]);
+
+  useEffect(() => {
     if (movie) {
       setTitle(movie.title);
       setYear(String(movie.year));
       setDurationMinutes(String(movie.durationMinutes));
-      setLanguage(movie.language);
+      setLanguageId(movie.language.id);
       setSynopsis(movie.synopsis ?? "");
+
       setBudgetAmount(
         movie.budgetAmount != null ? String(movie.budgetAmount) : "",
       );
-      setCurrencyCode(movie.currency ?? "USD");
+
+      setCurrencyCode(movie.currencyCode ?? "USD");
+
+      setPosterUrl(movie.posterUrl ?? "");
+
       setGenreIds(movie.genres.map((genre) => genre.id));
     } else {
       setTitle("");
       setYear(String(new Date().getFullYear()));
       setDurationMinutes("");
-      setLanguage("ENGLISH");
+      setLanguageId("");
       setSynopsis("");
       setBudgetAmount("");
       setCurrencyCode("USD");
+      setPosterUrl("");
       setGenreIds([]);
       setValidationErrors({});
     }
@@ -117,8 +149,8 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       errors.DurationMinutes = "Duration must be at least 1 minute.";
     }
 
-    if (!language) {
-      errors.Language = "Language is required.";
+    if (!languageId) {
+      errors.LanguageId = "Language is required.";
     }
 
     if (genreIds.length === 0) {
@@ -135,6 +167,10 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
       } else if (budget > MAX_BUDGET) {
         errors.BudgetAmount = "Budget is too large.";
       }
+
+      if (!currencyCode) {
+        errors.CurrencyCode = "Currency is required.";
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -150,10 +186,11 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         year: Number(year),
         durationMinutes: Number(durationMinutes),
         genreIds,
-        language,
+        languageId,
         synopsis: synopsis.trim() || undefined,
         budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
         currencyCode: budgetAmount ? currencyCode : undefined,
+        posterUrl: posterUrl.trim() || undefined,
       };
 
       if (movie) {
@@ -172,10 +209,11 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         setYear(String(new Date().getFullYear()));
         setDurationMinutes("");
         setGenreIds([]);
-        setLanguage("ENGLISH");
+        setLanguageId("");
         setSynopsis("");
         setBudgetAmount("");
         setCurrencyCode("USD");
+        setPosterUrl("");
       }
 
       setValidationErrors({});
@@ -196,9 +234,12 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
         </div>
       )}
 
-      <h2 className="text-xl font-semibold text-white">Add Movie</h2>
+      <h2 className="text-xl font-semibold text-white">
+        {movie ? "Edit Movie" : "Add Movie"}
+      </h2>
 
       <div className="mt-6 space-y-5">
+        {/* Title */}
         <div>
           <RequiredLabel htmlFor="title" required>
             Title
@@ -217,6 +258,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
+        {/* Year */}
         <div>
           <RequiredLabel htmlFor="year" required>
             Year
@@ -235,6 +277,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
+        {/* Duration */}
         <div>
           <RequiredLabel htmlFor="duration" required>
             Duration
@@ -256,6 +299,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
+        {/* Genres */}
         <div>
           <RequiredLabel htmlFor="genres" required>
             Genres
@@ -293,6 +337,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
+        {/* Language */}
         <div>
           <RequiredLabel htmlFor="language" required>
             Language
@@ -300,21 +345,27 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
 
           <select
             id="language"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
+            value={languageId}
+            onChange={(event) => setLanguageId(event.target.value)}
             className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
           >
-            <option value="ENGLISH">English</option>
-            <option value="FRENCH">French</option>
-            <option value="GERMAN">German</option>
-            <option value="SPANISH">Spanish</option>
+            <option value="">Select language</option>
+
+            {languages.map((language) => (
+              <option key={language.id} value={language.id}>
+                {language.name}
+              </option>
+            ))}
           </select>
 
           <FieldError
-            messages={validationErrors.Language ?? submitErrorDetails.Language}
+            messages={
+              validationErrors.LanguageId ?? submitErrorDetails.LanguageId
+            }
           />
         </div>
 
+        {/* Synopsis */}
         <div>
           <label
             htmlFor="synopsis"
@@ -332,6 +383,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           />
         </div>
 
+        {/* Budget + Currency */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -348,6 +400,7 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
               onChange={(event) => setBudgetAmount(event.target.value)}
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
             />
+
             <FieldError
               messages={
                 validationErrors.BudgetAmount ?? submitErrorDetails.BudgetAmount
@@ -372,6 +425,9 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
               <option value="SEK">SEK</option>
+              <option value="DKK">DKK</option>
+              <option value="CNY">CNY</option>
+              <option value="JPY">JPY</option>
             </select>
 
             <FieldError
@@ -382,13 +438,33 @@ export function MovieForm({ movie, onCancelEdit }: MovieFormProps) {
           </div>
         </div>
 
+        {/* Poster URL */}
+        <div>
+          <label
+            htmlFor="posterUrl"
+            className="mb-2 block text-sm font-medium text-zinc-300"
+          >
+            Poster URL
+          </label>
+
+          <input
+            id="posterUrl"
+            type="url"
+            value={posterUrl}
+            onChange={(event) => setPosterUrl(event.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-2 text-white outline-none focus:border-yellow-500"
+          />
+        </div>
+
+        {/* Actions */}
         <div className="flex gap-3">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400"
+            className="rounded-md bg-yellow-500 px-5 py-2 font-semibold text-black transition hover:bg-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {movie ? "Update Movie" : "Add Movie"}
+            {isSubmitting ? "Saving..." : movie ? "Update Movie" : "Add Movie"}
           </button>
 
           {movie && onCancelEdit && (
