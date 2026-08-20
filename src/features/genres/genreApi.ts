@@ -1,7 +1,7 @@
 import type { ApiResponse } from "../../shared/types/api";
 import type { Genre } from "./types/genre";
 
-const API_URL = "http://localhost:5224/api";
+const API_URL = "https://localhost:7294/api";
 
 export async function getGenres(): Promise<Genre[]> {
   const response = await fetch(`${API_URL}/genres`);

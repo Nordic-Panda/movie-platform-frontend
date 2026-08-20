@@ -4,7 +4,7 @@ import type { Movie } from "./types/movie";
 import type { CreateMovieRequest } from "./types/createMovie";
 import type { PagedResult } from "../../shared/types/pageResult";
 
-const API_URL = "http://localhost:5224/api";
+const API_URL = "https://localhost:7294/api";
 
 export async function getMovies(page: number = 1): Promise<PagedResult<Movie>> {
   const response = await fetch(`${API_URL}/movies?page=${page}`);

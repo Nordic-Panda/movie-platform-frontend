@@ -2,7 +2,7 @@ import type { ApiResponse } from "../../shared/types/api";
 import { ApiException } from "../../services/ApiException";
 import type { Language } from "./types/language";
 
-const API_URL = "http://localhost:5224/api";
+const API_URL = "https://localhost:7294/api";
 
 export async function getLanguages(): Promise<Language[]> {
   const response = await fetch(`${API_URL}/languages`);
