@@ -1,134 +1,51 @@
-import { useEffect, useRef, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
-import {
-  deleteMovie,
-  fetchMovies,
-  resetCreateStatus,
-  resetUpdateStatus,
-  resetDeleteStatus,
-} from "../features/movies/movieSlice";
+import { useState } from "react";
 import { MovieGrid } from "../features/movies/components/MovieGrid";
 import { MovieForm } from "../features/movies/components/MovieForm";
-import { Pagination } from "../shared/components/Pagination";
-import type { Movie } from "../features/movies/types/movie";
 import { DeleteMovieModal } from "../features/movies/components/DeleteMovieModal";
+import { useMoviePage } from "../features/movies/hooks/useMoviePage";
+import { Pagination } from "../shared/components/Pagination";
 import { ConfirmationModal } from "../shared/components/ConfirmationModal";
 import { LoadingSpinner } from "../shared/components/LoadingSpinner";
-import { LoadingOverlay } from "../shared/components/LoadingOverLay";
+import { LoadingOverlay } from "../shared/components/LoadingOverlay";
+import type { Movie } from "../features/movies/types/movie";
 
 export default function HomePage() {
-  const dispatch = useAppDispatch();
-
   const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>();
   const [movieToDelete, setMovieToDelete] = useState<Movie | undefined>();
 
-  const [showCreateConfirmation, setShowCreateConfirmation] = useState(false);
-  const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
+  // Get data from custom hook
+  const {
+    movies,
+    page,
+    totalPages,
 
-  const moviesListRef = useRef<HTMLDivElement>(null);
-  const previousPageRef = useRef<number | null>(null);
+    fetchStatus,
+    fetchError,
 
-  const movies = useAppSelector((state) => state.movies.items);
+    createStatus,
+    createError,
 
-  const page = useAppSelector((state) => state.movies.page);
-  const pageSize = useAppSelector((state) => state.movies.pageSize);
-  const totalPages = useAppSelector((state) => state.movies.totalPages);
+    updateStatus,
+    updateError,
 
-  const fetchStatus = useAppSelector((state) => state.movies.fetchStatus);
-  const fetchError = useAppSelector((state) => state.movies.fetchError);
+    deleteStatus,
+    deleteError,
 
-  const createStatus = useAppSelector((state) => state.movies.createStatus);
-  const createError = useAppSelector((state) => state.movies.createError);
+    showCreateConfirmation,
+    showUpdateConfirmation,
 
-  const updateStatus = useAppSelector((state) => state.movies.updateStatus);
-  const updateError = useAppSelector((state) => state.movies.updateError);
+    handlePageChange,
+    handleDelete,
 
-  const deleteStatus = useAppSelector((state) => state.movies.deleteStatus);
-  const deleteError = useAppSelector((state) => state.movies.deleteError);
-
-  useEffect(() => {
-    dispatch(
-      fetchMovies({
-        page: 1,
-        pageSize,
-      }),
-    );
-  }, [dispatch, pageSize]);
-
-  useEffect(() => {
-    if (fetchStatus !== "succeeded") {
-      return;
-    }
-
-    if (previousPageRef.current === null) {
-      previousPageRef.current = page;
-      return;
-    }
-
-    if (previousPageRef.current === page) {
-      return;
-    }
-
-    previousPageRef.current = page;
-
-    const element = moviesListRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    const top = element.getBoundingClientRect().top + window.scrollY - 32;
-
-    window.scrollTo({
-      top,
-      behavior: "smooth",
-    });
-  }, [page, fetchStatus]);
-
-  useEffect(() => {
-    if (createStatus !== "succeeded") {
-      return;
-    }
-
-    // the .unwrap here is basically getting status, if it's succeeded, continue, else go to catch
-    dispatch(
-      fetchMovies({
-        page,
-        pageSize,
-      }),
-    )
-      .unwrap()
-      .then(() => {
-        setShowCreateConfirmation(true);
-        dispatch(resetCreateStatus());
-      })
-      .catch(() => {
-        // fetchMovies already stores the error in Redux.
-      });
-  }, [createStatus, dispatch, page, pageSize]);
-
-  useEffect(() => {
-    if (updateStatus !== "succeeded") {
-      return;
-    }
-
-    setShowUpdateConfirmation(true);
-  }, [updateStatus]);
-
-  function handlePageChange(newPage: number) {
-    dispatch(
-      fetchMovies({
-        page: newPage,
-        pageSize,
-      }),
-    );
-  }
+    closeCreateConfirmation,
+    closeUpdateConfirmation,
+  } = useMoviePage();
 
   function handleEdit(movie: Movie) {
     setSelectedMovie(movie);
   }
 
-  function handleDelete(id: string) {
+  function handleMovieDelete(id: string) {
     const movie = movies.find((movie) => movie.id === id);
 
     if (!movie) {
@@ -143,39 +60,20 @@ export default function HomePage() {
       return;
     }
 
-    const deletedMovieId = movieToDelete.id;
-
     try {
-      await dispatch(deleteMovie(deletedMovieId)).unwrap();
+      await handleDelete(movieToDelete.id);
 
-      if (selectedMovie?.id === deletedMovieId) {
+      // If the deleted movie was being edited,
+      // stop editing it.
+      if (selectedMovie?.id === movieToDelete.id) {
         setSelectedMovie(undefined);
       }
 
+      // Only close the modal after delete has been handled.
       setMovieToDelete(undefined);
-
-      const targetPage = movies.length === 1 && page > 1 ? page - 1 : page;
-
-      await dispatch(
-        fetchMovies({
-          page: targetPage,
-          pageSize,
-        }),
-      ).unwrap();
-
-      dispatch(resetDeleteStatus());
     } catch {
-      // Redux already stores the error.
+      // Redux already contains the error.
     }
-  }
-
-  function closeCreateConfirmation() {
-    setShowCreateConfirmation(false);
-  }
-
-  function closeUpdateConfirmation() {
-    setShowUpdateConfirmation(false);
-    dispatch(resetUpdateStatus());
   }
 
   const isInitialLoading = fetchStatus === "loading" && movies.length === 0;
@@ -200,12 +98,14 @@ export default function HomePage() {
           </p>
         </div>
 
+        {/* Initial loading */}
         {isInitialLoading && (
           <div className="flex justify-center py-16">
             <LoadingSpinner size="lg" />
           </div>
         )}
 
+        {/* Fetch error */}
         {fetchStatus === "failed" && fetchError && (
           <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-5">
             <p className="font-medium text-red-400">Failed to load movies</p>
@@ -214,6 +114,7 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Create error */}
         {createStatus === "failed" && createError && (
           <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-5">
             <p className="font-medium text-red-400">Failed to create movie</p>
@@ -222,6 +123,7 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Update error */}
         {updateStatus === "failed" && updateError && (
           <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-5">
             <p className="font-medium text-red-400">Failed to update movie</p>
@@ -230,6 +132,7 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Delete error */}
         {deleteStatus === "failed" && deleteError && (
           <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-5">
             <p className="font-medium text-red-400">Failed to delete movie</p>
@@ -238,13 +141,15 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Create / Update form */}
         <MovieForm
           movie={selectedMovie}
           onCancelEdit={() => setSelectedMovie(undefined)}
         />
 
+        {/* Movie list */}
         {movies.length > 0 && (
-          <div ref={moviesListRef} className="relative mt-6">
+          <div className="relative mt-6">
             <div
               className={`transition-opacity duration-300 ${
                 isRefreshing ? "opacity-60" : "opacity-100"
@@ -253,7 +158,7 @@ export default function HomePage() {
               <MovieGrid
                 movies={movies}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={handleMovieDelete}
               />
             </div>
 
@@ -261,6 +166,7 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Pagination */}
         <Pagination
           currentPage={page}
           totalPages={totalPages}
@@ -268,6 +174,7 @@ export default function HomePage() {
         />
       </section>
 
+      {/* Delete confirmation */}
       {movieToDelete && (
         <DeleteMovieModal
           movieTitle={movieToDelete.title}
@@ -276,6 +183,7 @@ export default function HomePage() {
         />
       )}
 
+      {/* Create confirmation */}
       {showCreateConfirmation && (
         <ConfirmationModal
           title="Movie Created"
@@ -285,6 +193,7 @@ export default function HomePage() {
         />
       )}
 
+      {/* Update confirmation */}
       {showUpdateConfirmation && (
         <ConfirmationModal
           title="Movie Updated"
