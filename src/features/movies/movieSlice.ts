@@ -25,6 +25,7 @@ interface MovieState {
   deleteErrorDetails: Record<string, string[]>;
 
   page: number;
+  pageSize: number;
   totalCount: number;
   totalPages: number;
 }
@@ -49,13 +50,14 @@ const initialState: MovieState = {
   deleteErrorDetails: {},
 
   page: 1,
+  pageSize: 20,
   totalCount: 0,
   totalPages: 0,
 };
 
 export const fetchMovies = createAsyncThunk<
   PagedResult<Movie>,
-  number | undefined,
+  { page?: number; pageSize?: number },
   {
     rejectValue: {
       code: string;
@@ -63,21 +65,24 @@ export const fetchMovies = createAsyncThunk<
       details: Record<string, string[]>;
     };
   }
->("movies/fetchMovies", async (page: number = 1, { rejectWithValue }) => {
-  try {
-    return await movieApi.getMovies(page);
-  } catch (error) {
-    if (error instanceof ApiException) {
-      return rejectWithValue({
-        code: error.code,
-        message: error.message,
-        details: error.details,
-      });
-    }
+>(
+  "movies/fetchMovies",
+  async ({ page = 1, pageSize = 20 }, { rejectWithValue }) => {
+    try {
+      return await movieApi.getMovies(page, pageSize);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        return rejectWithValue({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      }
 
-    throw error;
-  }
-});
+      throw error;
+    }
+  },
+);
 
 export const createMovie = createAsyncThunk<
   Movie,
@@ -166,6 +171,18 @@ const movieSlice = createSlice({
       state.createStatus = "idle";
       state.createError = null;
       state.createErrorDetails = {};
+    },
+
+    resetUpdateStatus: (state) => {
+      state.updateStatus = "idle";
+      state.updateError = null;
+      state.updateErrorDetails = {};
+    },
+
+    resetDeleteStatus: (state) => {
+      state.deleteStatus = "idle";
+      state.deleteError = null;
+      state.deleteErrorDetails = {};
     },
   },
 
@@ -278,6 +295,7 @@ const movieSlice = createSlice({
   },
 });
 
-export const { resetCreateStatus } = movieSlice.actions;
+export const { resetCreateStatus, resetUpdateStatus, resetDeleteStatus } =
+  movieSlice.actions;
 
 export default movieSlice.reducer;

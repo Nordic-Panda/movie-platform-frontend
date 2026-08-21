@@ -6,8 +6,13 @@ import type { PagedResult } from "../../shared/types/pageResult";
 
 const API_URL = "https://localhost:7294/api";
 
-export async function getMovies(page: number = 1): Promise<PagedResult<Movie>> {
-  const response = await fetch(`${API_URL}/movies?page=${page}`);
+export async function getMovies(
+  page: number = 1,
+  pageSize: number = 20,
+): Promise<PagedResult<Movie>> {
+  const response = await fetch(
+    `${API_URL}/movies?page=${page}&pageSize=${pageSize}`,
+  );
 
   const result: ApiResponse<PagedResult<Movie>> = await response.json();
 
