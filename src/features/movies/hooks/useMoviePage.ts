@@ -1,35 +1,19 @@
-// Custom hook for the HomePage movie-related logic.
+// Custom hook for the HomePage movie logic.
 //
-// Since HomePage was abit crowded,
-// this hook keeps the page's business/state logic separate from the UI.
-// HomePage is mainly responsible for rendering components and passing props,
-// while this hook handles things such as:
-// - Redux state and selectors
-// - fetching movies
-// - pagination
-// - scrolling after page changes
-// - create/update/delete status handling
-// - confirmation modal state
-// - delete and refresh logic
+// HomePage was getting a bit crowded, thus moved the movie-related
+// state and logic here, such as fetching, pagination, scrolling,
+// CRUD status, confirmations and delete logic.
 //
-// Breaking this logic out makes HomePage smaller and easier to read.
-// It is similar to breaking a large backend handler into smaller methods
-// or moving related logic into a separate service/class: each part has
-// a clearer responsibility instead of putting everything in one place.
+// This keeps HomePage focused more on the UI and makes the code
+// easier to read and maintain.
 //
-// This is called a "custom hook" because it is a reusable function that
-// uses React hooks such as useState, useEffect, and useRef.
-// A custom hook normally starts with "use", which allows React hook rules
-// to apply to it.
-//
-// The main benefit is separation of concerns:
-// the component focuses on WHAT the UI should render,
-// while the hook handles HOW the movie page state and behavior works.
+// A custom hook is just a function that uses React hooks like
+// useState, useEffect and useRef. It does not render UI itself.
 //
 // Self-note:
-// Think of a custom hook as a place to extract React-related logic from
-// a component. It does not render UI itself. It gives the component the
-// data, state, and functions it needs.
+// Think of it as moving React-related logic out of a component.
+// It doesn't have to be reusable; here the main goal is to keep
+// HomePage clean.
 
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
