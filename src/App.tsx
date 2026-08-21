@@ -1,11 +1,13 @@
-import { Route, Routes } from "react-router";
+import { Header } from "./shared/layout/Header";
 import HomePage from "./pages/HomePage";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-    </Routes>
+    <div className="min-h-screen bg-zinc-950">
+      <Header />
+
+      <HomePage />
+    </div>
   );
 }
 
