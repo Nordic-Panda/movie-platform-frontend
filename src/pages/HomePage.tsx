@@ -19,6 +19,8 @@ export default function HomePage() {
     page,
     totalPages,
 
+    moviesListRef,
+
     fetchStatus,
     fetchError,
 
@@ -149,7 +151,7 @@ export default function HomePage() {
 
         {/* Movie list */}
         {movies.length > 0 && (
-          <div className="relative mt-6">
+          <div ref={moviesListRef} className="relative mt-6">
             <div
               className={`transition-opacity duration-300 ${
                 isRefreshing ? "opacity-60" : "opacity-100"

@@ -181,6 +181,8 @@ export function useMoviePage() {
     pageSize,
     totalPages,
 
+    moviesListRef,
+
     fetchStatus,
     fetchError,
 
@@ -195,8 +197,6 @@ export function useMoviePage() {
 
     showCreateConfirmation,
     showUpdateConfirmation,
-
-    moviesListRef,
 
     handlePageChange,
     handleDelete,
