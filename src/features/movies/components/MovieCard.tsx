@@ -1,4 +1,5 @@
 import type { Movie } from "../types/movie";
+import { Link } from "react-router-dom";
 
 interface MovieCardProps {
   movie: Movie;
@@ -10,25 +11,29 @@ export function MovieCard({ movie, onEdit, onDelete }: MovieCardProps) {
   return (
     <article className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all duration-300 ease-out hover:-translate-y-2 hover:border-zinc-600 hover:shadow-xl">
       <div className="aspect-2/3 overflow-hidden bg-zinc-800">
-        {movie.posterUrl ? (
-          <img
-            src={movie.posterUrl}
-            alt={`${movie.title} poster`}
-            className="h-full w-full cursor-pointer object-cover transition-transform duration-300 ease-out hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-4xl font-black text-zinc-700">
-              {movie.title.charAt(0)}
-            </span>
-          </div>
-        )}
+        <Link to={`/movies/${movie.id}`}>
+          {movie.posterUrl ? (
+            <img
+              src={movie.posterUrl}
+              alt={`${movie.title} poster`}
+              className="h-full w-full cursor-pointer object-cover transition-transform duration-300 ease-out hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <span className="text-4xl font-black text-zinc-700">
+                {movie.title.charAt(0)}
+              </span>
+            </div>
+          )}
+        </Link>
       </div>
 
       <div className="p-4">
-        <h2 className="truncate text-lg font-semibold text-white">
-          {movie.title}
-        </h2>
+        <Link to={`/movies/${movie.id}`}>
+          <h2 className="cursor-pointer truncate text-lg font-semibold text-white hover:text-yellow-500">
+            {movie.title}
+          </h2>
+        </Link>
 
         <div className="mt-2 flex items-center justify-between text-sm text-zinc-400">
           <span>
