@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useMovieDetails } from "../features/movies/hooks/useMovieDetails";
 import { MovieDetailsHero } from "../features/movies/components/MovieDetailsHero";
+import { MovieCast } from "../features/movies/components/MovieCast";
 
 export default function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,8 @@ export default function MovieDetailsPage() {
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="mx-auto max-w-7xl px-6 py-12">
         <MovieDetailsHero movie={movie} />
+
+        <MovieCast cast={movie.cast} />
       </section>
     </main>
   );
