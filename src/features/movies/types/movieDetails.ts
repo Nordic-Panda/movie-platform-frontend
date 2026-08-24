@@ -14,8 +14,9 @@ export interface MovieReview {
   movieId: string;
   comment: string;
   rating: number;
-  username: string;
   displayName: string;
+  username: string;
+  createdAt: string;
 }
 
 export interface MovieDetails {
@@ -24,13 +25,20 @@ export interface MovieDetails {
   year: number;
   durationMinutes: number;
   synopsis: string | null;
+
   budget: {
     amount: number | null;
     currencyName: string | null;
     currencyCode: string | null;
   } | null;
+
   language: Language;
   cast: MovieCast[];
   reviews: MovieReview[];
+
+  averageRating: number | null;
+  reviewCount: number;
+
   posterUrl: string | null;
+  createdAt: string;
 }

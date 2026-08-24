@@ -32,6 +32,23 @@ export function MovieDetailsHero({ movie }: MovieDetailsHeroProps) {
           <span>{movie.language.name}</span>
         </div>
 
+        <div className="mt-3 flex items-center gap-3 text-sm">
+          {movie.averageRating !== null ? (
+            <>
+              <span className="text-yellow-500">
+                ★ {movie.averageRating.toFixed(1)}
+              </span>
+
+              <span className="text-zinc-500">
+                {movie.reviewCount}{" "}
+                {movie.reviewCount === 1 ? "review" : "reviews"}
+              </span>
+            </>
+          ) : (
+            <span className="text-zinc-500">No reviews yet</span>
+          )}
+        </div>
+
         {movie.synopsis && (
           <p className="mt-6 max-w-3xl leading-relaxed text-zinc-300">
             {movie.synopsis}
