@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Logo } from "../brand/Logo";
 
 export function Header() {
@@ -7,19 +8,28 @@ export function Header() {
         <Logo />
 
         <nav className="flex items-center gap-8">
-          <a
-            href="/"
-            className="text-sm font-medium text-white transition hover:text-yellow-500"
-          >
-            Movies
-          </a>
+          <div className="flex items-center gap-8">
+            <Link
+              to="/"
+              className="text-sm font-medium text-white transition hover:text-yellow-500"
+            >
+              Movies
+            </Link>
 
-          <a
-            href="/genres"
-            className="text-sm font-medium text-zinc-400 transition hover:text-yellow-500"
+            <Link
+              to="/about"
+              className="text-sm font-medium text-zinc-400 transition hover:text-yellow-500"
+            >
+              About Us
+            </Link>
+          </div>
+
+          <Link
+            to="/login"
+            className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-yellow-400"
           >
-            Genres
-          </a>
+            Sign In
+          </Link>
         </nav>
       </div>
     </header>

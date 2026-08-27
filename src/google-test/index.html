@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>For testing google login</title>
+</head>
+<body>
+
+    <h1>Google Login Test</h1>
+
+    <div id="g_id_onload"
+         data-client_id="401675020373-f1ih5kv97ihpbc2vj3fd49ps7jki7fsv.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+
+    <div class="g_id_signin"></div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        async function handleCredentialResponse(response) {
+            console.log("Google credential:", response.credential);
+
+            const result = await fetch("https://localhost:7294/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    provider: "Google",
+                    credential: response.credential
+                })
+            });
+
+            const data = await result.json();
+
+            console.log("Backend response:", data);
+        }
+    </script>
+
+</body>
+</html>
