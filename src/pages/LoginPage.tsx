@@ -1,46 +1,51 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 
-import { login } from "../features/auth/authApi";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { login, resetLoginStatus } from "../features/auth/authSlice";
 import { LoadingSpinner } from "../shared/components/LoadingSpinner";
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
 
-  const handleGoogleSuccess = useCallback(async (credential: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loginStatus = useAppSelector((state) => state.auth.loginStatus);
+  const loginError = useAppSelector((state) => state.auth.loginError);
 
-      const result = await login({
-        provider: "Google",
-        credential,
-      });
+  const isLoading = loginStatus === "loading";
 
-      console.log("Backend response:", result);
+  const handleGoogleSuccess = useCallback(
+    async (credential: string) => {
+      try {
+        dispatch(resetLoginStatus());
 
-      if (result.requiresRegistration) {
-        console.log("External registration:", result.externalRegistration);
+        const result = await dispatch(
+          login({
+            provider: "Google",
+            credential,
+          }),
+        ).unwrap();
 
-        return;
+        console.log("Backend response:", result);
+
+        if (result.requiresRegistration) {
+          console.log("External registration:", result.externalRegistration);
+
+          return;
+        }
+
+        console.log("User:", result.user);
+        console.log("Access token:", result.accessToken);
+      } catch (error) {
+        console.error("Login failed:", error);
       }
+    },
+    [dispatch],
+  );
 
-      console.log("User:", result.user);
-      console.log("Access token:", result.accessToken);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to sign in with Google",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
+  // Note that here we are facing two different kind of errors
+  // Google SDK error, and our BE error, idealy, split them up
   function handleGoogleError() {
-    setError("Google sign-in failed.");
+    dispatch(resetLoginStatus());
   }
 
   return (
@@ -56,9 +61,9 @@ export default function LoginPage() {
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-            {error && (
+            {loginError && (
               <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 p-4">
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-sm text-red-400">{loginError}</p>
               </div>
             )}
 
@@ -69,7 +74,7 @@ export default function LoginPage() {
                 <GoogleLogin
                   onSuccess={(response) => {
                     if (!response.credential) {
-                      setError("Google did not return a credential.");
+                      dispatch(resetLoginStatus());
                       return;
                     }
 
