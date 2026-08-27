@@ -34,7 +34,7 @@ export default function LoginPage() {
         }
 
         console.log("User:", result.user);
-        console.log("Access token:", result.accessToken);
+        //console.log("Access token:", result.accessToken);
       } catch (error) {
         console.error("Login failed:", error);
       }

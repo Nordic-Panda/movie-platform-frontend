@@ -3,7 +3,6 @@ import type { ExternalRegistration } from "./ExternalRegistration";
 
 export interface LoginResponse {
   requiresRegistration: boolean;
-  accessToken: string | null;
   expiresInMinutes: number | null;
   user: User | null;
   externalRegistration: ExternalRegistration | null;

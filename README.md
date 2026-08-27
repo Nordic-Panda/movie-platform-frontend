@@ -1,3 +1,7 @@
+Choosing HttpOnly Cookie to handle accesstoken,
+
+- Let browser store it while it is not accessible from client-side JS. Redux can then just story authenticated user's state, not the credential itself.
+
 # Movie Platform – Frontend
 
 A React frontend for a movie platform built with React, TypeScript, and Tailwind CSS.

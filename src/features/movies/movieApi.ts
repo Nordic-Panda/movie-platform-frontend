@@ -1,108 +1,43 @@
-import type { ApiResponse } from "../../shared/types/api";
-import { ApiException } from "../../services/ApiException";
-import type { Movie } from "./types/movie";
+import { apiFetch } from "../../services/apiClient";
 import type { CreateMovieRequest } from "./types/createMovie";
-import type { PagedResult } from "../../shared/types/pageResult";
+import type { Movie } from "./types/movie";
 import type { MovieDetails } from "./types/movieDetails";
+import type { PagedResult } from "../../shared/types/pageResult";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-export async function getMovies(
+export function getMovies(
   page: number = 1,
   pageSize: number = 20,
 ): Promise<PagedResult<Movie>> {
-  const response = await fetch(
-    `${API_URL}/movies?page=${page}&pageSize=${pageSize}`,
-  );
-
-  const result: ApiResponse<PagedResult<Movie>> = await response.json();
-
-  if (!result.success) {
-    throw new ApiException(
-      result.error.code,
-      result.error.message,
-      result.error.details,
-    );
-  }
-
-  return result.data;
+  return apiFetch(`/movies?page=${page}&pageSize=${pageSize}`, {
+    authenticated: false,
+  });
 }
 
-export async function createMovie(request: CreateMovieRequest): Promise<Movie> {
-  const response = await fetch(`${API_URL}/movies`, {
+export function createMovie(request: CreateMovieRequest): Promise<Movie> {
+  return apiFetch<Movie>("/movies", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(request),
   });
-
-  const result: ApiResponse<Movie> = await response.json();
-
-  if (!result.success) {
-    throw new ApiException(
-      result.error.code,
-      result.error.message,
-      result.error.details,
-    );
-  }
-
-  return result.data;
 }
 
-export async function updateMovie(
+export function updateMovie(
   id: string,
   request: CreateMovieRequest,
 ): Promise<Movie> {
-  const response = await fetch(`${API_URL}/movies/${id}`, {
+  return apiFetch<Movie>(`/movies/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(request),
   });
-
-  const result: ApiResponse<Movie> = await response.json();
-
-  if (!result.success) {
-    throw new ApiException(
-      result.error.code,
-      result.error.message,
-      result.error.details,
-    );
-  }
-
-  return result.data;
 }
 
-export async function deleteMovie(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/movies/${id}`, {
+export function deleteMovie(id: string): Promise<void> {
+  return apiFetch<void>(`/movies/${id}`, {
     method: "DELETE",
   });
-
-  const result: ApiResponse<string> = await response.json();
-
-  if (!result.success) {
-    throw new ApiException(
-      result.error.code,
-      result.error.message,
-      result.error.details,
-    );
-  }
 }
 
-export async function getMovieDetails(id: string): Promise<MovieDetails> {
-  const response = await fetch(`${API_URL}/movies/${id}/details`);
-
-  const result: ApiResponse<MovieDetails> = await response.json();
-
-  if (!result.success) {
-    throw new ApiException(
-      result.error.code,
-      result.error.message,
-      result.error.details,
-    );
-  }
-
-  return result.data;
+export function getMovieDetails(id: string): Promise<MovieDetails> {
+  return apiFetch<MovieDetails>(`/movies/${id}/details`, {
+    authenticated: false,
+  });
 }

@@ -11,8 +11,6 @@ import type { ExternalRegistration } from "./types/ExternalRegistration";
 interface AuthState {
   user: User | null;
 
-  accessToken: string | null;
-
   expiresInMinutes: number | null;
 
   externalRegistration: ExternalRegistration | null;
@@ -26,8 +24,6 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-
-  accessToken: null,
 
   expiresInMinutes: null,
 
@@ -74,8 +70,6 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
-
-      state.accessToken = null;
 
       state.expiresInMinutes = null;
 
@@ -129,8 +123,6 @@ const authSlice = createSlice({
 
           state.user = null;
 
-          state.accessToken = null;
-
           state.expiresInMinutes = null;
 
           return;
@@ -145,8 +137,6 @@ const authSlice = createSlice({
         state.externalRegistration = null;
 
         state.user = result.user;
-
-        state.accessToken = result.accessToken;
 
         state.expiresInMinutes = result.expiresInMinutes;
       })
