@@ -1,7 +1,7 @@
 import type { ApiResponse } from "../../shared/types/api";
 import type { Genre } from "./types/genre";
 
-const API_URL = "https://localhost:7294/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function getGenres(): Promise<Genre[]> {
   const response = await fetch(`${API_URL}/genres`);

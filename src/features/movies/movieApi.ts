@@ -5,7 +5,7 @@ import type { CreateMovieRequest } from "./types/createMovie";
 import type { PagedResult } from "../../shared/types/pageResult";
 import type { MovieDetails } from "./types/movieDetails";
 
-const API_URL = "https://localhost:7294/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function getMovies(
   page: number = 1,

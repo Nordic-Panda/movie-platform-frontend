@@ -2,7 +2,7 @@ import type { ApiResponse } from "../../shared/types/api";
 import { ApiException } from "../../services/ApiException";
 import type { Currency } from "./types/currency";
 
-const API_URL = "https://localhost:7294/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function getCurrencies(): Promise<Currency[]> {
   const response = await fetch(`${API_URL}/currencies`);
